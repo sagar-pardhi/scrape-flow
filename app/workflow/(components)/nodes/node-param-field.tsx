@@ -17,8 +17,6 @@ export const NodeParamField = ({
   const node = getNode(nodeId) as AppNode;
   const value = node?.data?.inputs?.[param.name];
 
-  console.log("NodeParamField", value);
-
   const updateNodeParamValue = useCallback(
     (newValue: string) => {
       updateNodeData(nodeId, {

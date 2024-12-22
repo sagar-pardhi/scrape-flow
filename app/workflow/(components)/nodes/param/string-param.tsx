@@ -9,7 +9,7 @@ export const StringParam = ({
   value,
   updateNodeParamValue,
 }: ParamProps) => {
-  const [internalValue, setInternalValue] = useState("");
+  const [internalValue, setInternalValue] = useState(value);
   const id = useId();
 
   return (
