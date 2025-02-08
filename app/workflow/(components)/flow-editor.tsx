@@ -35,7 +35,7 @@ const fitViewOptions = { padding: 1 };
 export const FlowEditor = ({ workflow }: { workflow: Workflow }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-  const { setViewport, screenToFlowPosition } = useReactFlow();
+  const { setViewport, screenToFlowPosition, updateNodeData } = useReactFlow();
 
   useEffect(() => {
     try {
@@ -54,24 +54,43 @@ export const FlowEditor = ({ workflow }: { workflow: Workflow }) => {
     event.dataTransfer.dropEffect = "move";
   }, []);
 
-  const onDrop = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    const taskType = event.dataTransfer.getData("application/reactflow");
+  const onDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+      const taskType = event.dataTransfer.getData("application/reactflow");
 
-    if (taskType === undefined || !taskType) return;
+      if (taskType === undefined || !taskType) return;
 
-    const position = screenToFlowPosition({
-      x: event.clientX,
-      y: event.clientY,
-    });
+      const position = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
 
-    const newNode = createFlowNode(taskType as TaskType, position);
-    setNodes((prev) => prev.concat(newNode));
-  }, []);
+      const newNode = createFlowNode(taskType as TaskType, position);
+      setNodes((prev) => prev.concat(newNode));
+    },
+    [screenToFlowPosition, setNodes]
+  );
 
-  const onConnect = useCallback((connection: Connection) => {
-    setEdges((prev) => addEdge({ ...connection, animated: true }, prev));
-  }, []);
+  const onConnect = useCallback(
+    (connection: Connection) => {
+      setEdges((prev) => addEdge({ ...connection, animated: true }, prev));
+      if (!connection.targetHandle) return;
+
+      const node = nodes.find((nd) => nd.id === connection.target);
+      if (!node) return;
+
+      const nodeInputs = node?.data.inputs;
+      // delete nodeInputs[connection.targetHandle];
+      updateNodeData(node.id, {
+        inputs: {
+          ...nodeInputs,
+          [connection.targetHandle]: "",
+        },
+      });
+    },
+    [setEdges, updateNodeData, nodes]
+  );
 
   return (
     <main className="h-full w-full">
